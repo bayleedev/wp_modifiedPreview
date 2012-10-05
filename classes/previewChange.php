@@ -23,55 +23,88 @@ class previewChange extends previewCore {
 	 * The value is the method of this object you wish to add.
 	 */
 	public static $filterMap = array(
-		'preview_post_link' => 'previewPostLink',
-		'admin_menu' => 'setupAdminMenu',
-		'admin_init' => 'setupScripts',
+		'admin_menu' => array(
+			'method' => 'setupAdminMenu',
+			'priority' => 10,
+			'args' => 1,
+		),
+		'post_link' => array(
+			'method' => 'postLink',
+			'priority' => 10,
+			'args' => 3,
+		),
+		'page_link' => array(
+			'method' => 'pageLink',
+			'priority' => 10,
+			'args' => 3,
+		),
 	);
 
 	/**
 	 * Will iterate the static property $filterMap and apply those filters
 	 */
 	public function __construct() {
-		foreach(self::$filterMap as $filter => $method) {
-			add_filter($filter, array($this, $method));
-		}
+		$filterMap =& self::$filterMap;
+		$class = __CLASS__;
+		add_filter('admin_init', function() use (&$filterMap, &$class) {
+			foreach($filterMap as $filter => $items) {
+				add_filter($filter, array($class, $items['method']), $items['priority'], $items['args']);
+			}
+		});
 	}
 
 	/**
-	 * Will parse the current link url for the given post
+	 * The front hook for page links.
+	 * Channels the request to self::postLink
 	 * 
-	 * @return string The new preview link path
+	 * @param string $url The predicted url of the post
+	 * @param int $post The current post id
 	 */
-	public static function previewPostLink() {
-		$url = get_option(self::key, 'http://google.com');
+	public static function pageLink($url, $id, $sample) {
+		// possibly a revision number somewhere in here?
+		$post = &get_post($id);
+		return self::postLink($url, $post);
+	}
 
-		$values = array_map('strval', (array)get_post($id));
-		$keys = array_map(function($key) {
-			return '%' . $key . '%';
-		}, array_keys($values));
-
-		return str_replace($keys, $values, $url);
+	/**
+	 * Try and overwrite the current url of posts/pages.
+	 * 
+	 * @param string $url The predicted url of the post
+	 * @param stdClass $post The current post contents
+	 * @param bool $leavename Optional, defaults to false. Whether to keep post name or page name.
+	 */
+	public static function postLink($url, $post, $leavename = false) {
+		if(in_array($post->post_status, array('draft', 'auto-draft', 'inherit'))) {
+			$url = get_option(self::key, $url);
+			foreach($post as $key => $value) {
+				if(is_array($value)) {
+					$value = implode(',', $value);
+				}
+				$url = str_replace('%' . $key . '%', (string)$value, $url);
+			}
+		}
+		return $url;
 	}
 
 	/**
 	 * Sets up the menu in the admin panel
 	 * @return null
 	 */
-	public function setupAdminMenu() {
-		add_options_page('Modified Preview', 'Modified Preview', 'manage_options', self::url, array($this, 'adminMenu'));
+	public static function setupAdminMenu() {
+		add_options_page('Modified Preview', 'Modified Preview', 'manage_options', self::url, array(__CLASS__, 'adminMenu'));
 		return;
 	}
 
 	/**
 	 * Gets the data to/from the view
 	 */
-	public function adminMenu() {
+	public static function adminMenu() {
 		$key = self::key;
 		$url = self::url;
 		if (isset($_POST[$key])) {
-			$this->saveOption($key, $_POST[$key]);
+			self::saveOption($key, $_POST[$key]);
 		}
-		$this->render('settings', compact('key', 'url'));
+		self::render('settings', compact('key', 'url'));
 		return;
 	}
 
@@ -81,25 +114,13 @@ class previewChange extends previewCore {
 	 * @param string $key
 	 * @param mixed $value
 	 */
-	protected function saveOption($key, $value) {
+	protected static function saveOption($key, $value) {
 		$option_exists = (get_option($key, null) !== null);
 		if ($option_exists) {
 			update_option($key, $value);
 		} else {
 			add_option($key, $value);
 		}
-		return;
-	}
-
-	public function setupScripts() {
-		$url = urlencode(get_option(self::key, 'http://google.com'));
-		wp_enqueue_script(
-			'publishedPreview',
-			plugins_url('/views/publishedPreview.js?url=' . $url, __DIR__),
-			array('jquery'),
-			0.1,
-			false
-		);
 		return;
 	}
 }
