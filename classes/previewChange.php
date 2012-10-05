@@ -25,6 +25,7 @@ class previewChange extends previewCore {
 	public static $filterMap = array(
 		'preview_post_link' => 'previewPostLink',
 		'admin_menu' => 'setupAdminMenu',
+		'admin_init' => 'setupScripts',
 	);
 
 	/**
@@ -32,7 +33,6 @@ class previewChange extends previewCore {
 	 */
 	public function __construct() {
 		foreach(self::$filterMap as $filter => $method) {
-			echo 'addingFilter: ' . $filter . '::' . $method . PHP_EOL;
 			add_filter($filter, array($this, $method));
 		}
 	}
@@ -72,6 +72,7 @@ class previewChange extends previewCore {
 			$this->saveOption($key, $_POST[$key]);
 		}
 		$this->render('settings', compact('key', 'url'));
+		return;
 	}
 
 	/**
@@ -87,5 +88,18 @@ class previewChange extends previewCore {
 		} else {
 			add_option($key, $value);
 		}
+		return;
+	}
+
+	public function setupScripts() {
+		$url = urlencode(get_option(self::key, 'http://google.com'));
+		wp_enqueue_script(
+			'publishedPreview',
+			plugins_url('/views/publishedPreview.js?url=' . $url, __DIR__),
+			array('jquery'),
+			0.1,
+			false
+		);
+		return;
 	}
 }
