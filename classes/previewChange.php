@@ -44,13 +44,9 @@ class previewChange extends previewCore {
 	 * Will iterate the static property $filterMap and apply those filters
 	 */
 	public function __construct() {
-		$filterMap =& self::$filterMap;
-		$class = __CLASS__;
-		add_filter('admin_init', function() use (&$filterMap, &$class) {
-			foreach($filterMap as $filter => $items) {
-				add_filter($filter, array($class, $items['method']), $items['priority'], $items['args']);
-			}
-		});
+		foreach(self::$filterMap as $filter => $items) {
+			add_filter($filter, array(__CLASS__, $items['method']), $items['priority'], $items['args']);
+		}
 	}
 
 	/**
