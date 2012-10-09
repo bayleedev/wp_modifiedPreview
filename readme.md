@@ -17,7 +17,7 @@ This plugin will allow you to change the action of the preview button.
 Run the following command from the root of your WordPress install
 
 ~~~ bash
-git submodule add git://github.com/BlaineSch/wp-wp_modifiedPreview.git wp-content/plugins/wp_modifiedPreview
+git submodule add git://github.com/BlaineSch/wp_modifiedPreview.git wp-content/plugins/wp_modifiedPreview
 ~~~
 
 ### Clone Directly
@@ -25,5 +25,5 @@ git submodule add git://github.com/BlaineSch/wp-wp_modifiedPreview.git wp-conten
 Run the following command from the root of your WordPress install
 
 ~~~ bash
-git clone git://github.com/BlaineSch/wp-wp_modifiedPreview.git wp-content/plugins/wp_modifiedPreview
+git clone git://github.com/BlaineSch/wp_modifiedPreview.git wp-content/plugins/wp_modifiedPreview
 ~~~

@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Modified Preview
-Plugin URI: http://github.com/BlaineSch/modifiedPreview
+Plugin URI: http://github.com/BlaineSch/wp_modifiedPreview
 Description: Change the url of the preview button
 Version: 0.1
 Author: Blaine Schmeisser
